@@ -17,7 +17,7 @@ document.getElementById("getBtn").addEventListener("click", function () {
         fetch("http://192.168.56.101:8000/request-vm", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ template: choice })})
+        body: JSON.stringify({ template: choice.toLowerCase() })})
     } })
 document.getElementById('getBtn').addEventListener('click', function () {
 this.disabled = true; // Disable the button
