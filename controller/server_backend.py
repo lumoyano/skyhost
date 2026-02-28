@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import psutil
 import httpx
 
 # py -m pip install fastapi uvicorn[standard] httpx psutil
@@ -11,22 +10,24 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # lock this down for final development
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+class VMRequest(BaseModel):
+    template: str  # will be "alpine" or "lubuntu"
+
+    # "http://192.168.1.10:8001",
+    # "http://192.168.1.11:8001",
 
 HOSTS = [
-    "http://192.168.1.10:8001",
-    "http://192.168.1.11:8001",
+    "http://127.0.0.1:8001",
+    "http://127.0.0.1:8002"
 ]
 
-@app.get("/")
-def root():
-    return {"message": "SkyHost Controller is running"}
 
-@app.get("/hosts")
+
 def get_hosts():
     results = []
     for host in HOSTS:
@@ -37,20 +38,24 @@ def get_hosts():
             results.append({"host": host, "health": "unreachable"})
     return results
 
-
-@app.get("/status")
-def status():
-    return {
-        "cpu": psutil.cpu_percent(),
-        "ram": psutil.virtual_memory().percent,
-        "vms": 0  # placeholder until virsh is connected
-    }
+def get_best_host():
+    hosts = get_hosts()
+    best_host = min(hosts, key=lambda h: h["health"]["cpu"] + h["health"]["ram"])
 
 
-class VMRequest(BaseModel):
-    template: str  # will be "alpine" or "lubuntu"
+@app.get("/")
+def root():
+    return {"message": "SkyHost Controller is running"}
+
+@app.get("/hosts")
+def hosts_endpoint():
+    return get_hosts()
+
+
 
 @app.post("/request-vm")
 def request_vm(request: VMRequest):
     print(request.template)  # "alpine" or "lubuntu"
+
+    httpx.post(f"{"host"}/start-vm", json={"template": request.template})
     return {"received": request.template}
