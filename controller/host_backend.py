@@ -27,8 +27,7 @@ class VMRequest(BaseModel):
 def status():
     return {
         "cpu": psutil.cpu_percent(),
-        "ram": psutil.virtual_memory().percent,
-        "vms": get_vm_count()  
+        "ram": psutil.virtual_memory().percent
     }
 
 
