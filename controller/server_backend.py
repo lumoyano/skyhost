@@ -18,6 +18,8 @@ app.add_middleware(
 class VMRequest(BaseModel):
     template: str  # will be "alpine" or "lubuntu"
     name: str
+    cpu: int = 1
+    ram: int = 512
     # "http://192.168.1.10:8001",
     # "http://192.168.1.11:8001",
 
@@ -45,7 +47,7 @@ def get_best_host():
     if not reachable: 
         return None
     
-    best_host = min(hosts, key=lambda h: h["health"]["cpu"] + h["health"]["ram"])
+    best_host = min(reachable, key=lambda h: h["health"]["cpu"] + h["health"]["ram"])
     # Can add weights in next version: 
     # best_host = min(hosts, key=lambda h: (h["health"]["cpu"] * 0.3) + (h["health"]["ram"] * 0.7))
     return best_host
@@ -66,7 +68,19 @@ def request_vm(request: VMRequest):
     print(request.template)  # "alpine" or "lubuntu"
     host = get_best_host()
 
-    if host is None: return {"error": "No hosts available"}
+    if host is None: 
+        return {"error": "No hosts available"}
 
-    httpx.post(f"{host}/start-vm", json={"template": request.template})
-    return {"received": request.template}
+    host_url = host["host"] 
+    response = httpx.post( 
+        f"{host_url}/start-vm", 
+        json={ 
+            "template": request.template + "-template", 
+            "name": request.name, 
+            "cpu": request.cpu, 
+            "ram": request.ram } ) 
+    
+    return { 
+        "host": host_url, 
+        "vm": response.json() 
+    }
