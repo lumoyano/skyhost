@@ -25,15 +25,8 @@ console.log('Button disabled');
 });
 
 
+let currentVM = null;  // This should be set when VM is created
 
-
-    const data = await response.json();
-
-    currentVM = data.vm_name;  // <-- Store VM name
-    console.log("VM started:", currentVM);
-
-
-// End session function
 async function endSession() {
 
     if (!currentVM) {
@@ -46,11 +39,6 @@ async function endSession() {
 
     try {
         const response = await fetch("/end-vm", {
-        } else {
-            output.textContent = `✅ You selected: ${select.options[select.selectedIndex].text}`;
-            output.style.color = "green";
-            const choice = `${select.options[select.selectedIndex].text}`;
-            fetch("http://127.0.0.1:8000/request-vm", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -60,24 +48,20 @@ async function endSession() {
             })
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error("Failed to end session");
+            throw new Error(data.detail || "Failed to end VM");
         }
 
-        const result = await response.json();
+        alert("Session ended.");
+        currentVM = null;
 
-        alert("Session ended successfully.");
-        console.log(result);
-
-        currentVM = null; // Clear stored VM
-
-    } catch (error) {
-        console.error("Error:", error);
+    } catch (err) {
+        console.error(err);
         alert("Error ending session.");
     }
 }
 
-
-// Attach button listener
 document.getElementById("endSessionBtn")
         .addEventListener("click", endSession);
