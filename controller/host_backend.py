@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from vm_manager import create_vm, delete_vm, get_vm_count
+from manager import create_vm, delete_vm, get_vm_count
 import psutil
 import httpx
 
