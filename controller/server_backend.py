@@ -17,13 +17,13 @@ app.add_middleware(
 
 class VMRequest(BaseModel):
     template: str  # will be "alpine" or "lubuntu"
-
+    name: str
     # "http://192.168.1.10:8001",
     # "http://192.168.1.11:8001",
 
 HOSTS = [
-    "http://127.0.0.1:8001",
-    "http://127.0.0.1:8002"
+    "http://192.168.56.102:8002",
+    "http://192.168.56.103:8003"
 ]
 
 
@@ -35,11 +35,16 @@ def get_hosts():
             response = httpx.get(f"{host}/health", timeout=5.0)
             results.append({"host": host, "health": response.json()})
         except Exception:
-            results.append({"host": host, "health": "unreachable"})
+            results.append({"host": host, "health": None})
     return results
 
 def get_best_host():
     hosts = get_hosts()
+
+    reachable = [h for h in hosts if h["health"] is not None] 
+    if not reachable: 
+        return None
+    
     best_host = min(hosts, key=lambda h: h["health"]["cpu"] + h["health"]["ram"])
     # Can add weights in next version: 
     # best_host = min(hosts, key=lambda h: (h["health"]["cpu"] * 0.3) + (h["health"]["ram"] * 0.7))
@@ -60,5 +65,8 @@ def hosts_endpoint():
 def request_vm(request: VMRequest):
     print(request.template)  # "alpine" or "lubuntu"
     host = get_best_host()
+
+    if host is None: return {"error": "No hosts available"}
+
     httpx.post(f"{host}/start-vm", json={"template": request.template})
     return {"received": request.template}
