@@ -1,0 +1,41 @@
+h1{
+    font-family: Ubuntu;
+    font-size: 4em;
+    color: white;
+}
+body {
+    background-color: #2e3440;
+    text-align: center;
+    padding: 20px;
+
+}
+ .custom-select-container {
+        align-items: center;
+    }
+
+    select {
+        background-color: white;
+        border: 2px solid white;
+        border-radius: 5px;
+        padding: 10px 40px 10px 15px;
+        font-size: 16px;
+        cursor: pointer;
+        outline: none;
+        position: relative;
+    }
+   
+
+    /* Button styling */
+    button {
+        background-color: #4c566a;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    button:hover {
+        background-color: #434c5e;
+    }
