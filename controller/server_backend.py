@@ -41,6 +41,9 @@ def get_hosts():
 def get_best_host():
     hosts = get_hosts()
     best_host = min(hosts, key=lambda h: h["health"]["cpu"] + h["health"]["ram"])
+    # Can add weights in next version: 
+    # best_host = min(hosts, key=lambda h: (h["health"]["cpu"] * 0.3) + (h["health"]["ram"] * 0.7))
+    return best_host
 
 
 @app.get("/")
@@ -56,6 +59,6 @@ def hosts_endpoint():
 @app.post("/request-vm")
 def request_vm(request: VMRequest):
     print(request.template)  # "alpine" or "lubuntu"
-
-    httpx.post(f"{"host"}/start-vm", json={"template": request.template})
+    host = get_best_host()
+    httpx.post(f"{host}/start-vm", json={"template": request.template})
     return {"received": request.template}
