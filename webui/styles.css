@@ -21,7 +21,6 @@ body {
         font-size: 16px;
         cursor: pointer;
         outline: none;
-        position: relative;
     }
    
 
@@ -35,7 +34,13 @@ body {
         border-radius: 5px;
         cursor: pointer;
         transition: background-color 0.3s ease;
+        margin: 20px;
     }
     button:hover {
         background-color: #434c5e;
+    }
+    button:disabled {
+        background-color: #999;
+        cursor: not-allowed;
+        opacity: 0.7;
     }
