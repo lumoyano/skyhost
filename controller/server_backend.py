@@ -1,17 +1,30 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import psutil
 import httpx
 
 # py -m pip install fastapi uvicorn[standard] httpx psutil
-# py -m uvicorn controller.server_backend:app --host 127.0.0.1 --port 8000
+# py -m uvicorn controller.server_backend:app --host 127.0.0.1 --port 8000 --reload
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 HOSTS = [
     "http://192.168.1.10:8001",
     "http://192.168.1.11:8001",
 ]
+
+@app.get("/")
+def root():
+    return {"message": "SkyHost Controller is running"}
 
 @app.get("/hosts")
 def get_hosts():
