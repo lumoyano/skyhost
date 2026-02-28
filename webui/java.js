@@ -8,6 +8,44 @@ document.getElementById("getBtn").addEventListener("click", function () {
     if (!select.value) {
             output.textContent = "⚠ Please select an option first.";
             output.style.color = "red";
+    } 
+    else {
+        output.textContent = `Starting VM Client`;
+        output.style.color = "white";
+        output.style.fontFamily = "Trebuchet MS"
+        const choice = `${select.options[select.selectedIndex].text}`;
+        fetch("http://192.168.56.101:8000/request-vm", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ template: choice })})
+    } })
+document.getElementById('getBtn').addEventListener('click', function () {
+this.disabled = true; // Disable the button
+console.log('Button disabled');
+});
+
+
+
+
+    const data = await response.json();
+
+    currentVM = data.vm_name;  // <-- Store VM name
+    console.log("VM started:", currentVM);
+
+
+// End session function
+async function endSession() {
+
+    if (!currentVM) {
+        alert("No active VM session.");
+        return;
+    }
+
+    const confirmEnd = confirm("Are you sure you want to end this session?");
+    if (!confirmEnd) return;
+
+    try {
+        const response = await fetch("/end-vm", {
         } else {
             output.textContent = `✅ You selected: ${select.options[select.selectedIndex].text}`;
             output.style.color = "green";
