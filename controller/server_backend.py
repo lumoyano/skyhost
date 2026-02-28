@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import psutil
 import httpx
+
+# py -m pip install fastapi uvicorn[standard] httpx psutil
+# py -m uvicorn controller.server_backend:app --host 127.0.0.1 --port 8000
 
 app = FastAPI()
 
@@ -19,6 +23,15 @@ def get_hosts():
         except Exception:
             results.append({"host": host, "health": "unreachable"})
     return results
+
+
+@app.get("/status")
+def status():
+    return {
+        "cpu": psutil.cpu_percent(),
+        "ram": psutil.virtual_memory().percent,
+        "vms": 0  # placeholder until virsh is connected
+    }
 
 
 class VMRequest(BaseModel):
