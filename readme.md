@@ -1,8 +1,82 @@
 # SkyHost
 
-SkyHost is a lightweight VM-orchestration platform designed to turn old or low-spec hardware into a unified compute cluster. It provides a central controller, host agents, a simple web UI, and a bootstrapper that helps users set up either a Host Node or the Controller.
+SkyHost is a lightweight virtual machine orchestration platform designed to turn old or low-spec hardware into a small, unified compute cluster.
 
-SkyHost is built for environments like schools, clubs, and small teams where hardware is inconsistent and ease of setup is critical.
+It provides:
+
+- A central **Controller API**
+- Lightweight **Host Agents**
+- A simple **Web UI**
+- VM provisioning using KVM + libvirt
+
+SkyHost is built for schools, labs, hackathons, clubs, and small teams that want to repurpose existing hardware without deploying heavy enterprise tooling.
+
+---
+
+## What Problem Does SkyHost Solve?
+
+Many organizations have spare machines that go unused because managing them together is complicated.
+
+SkyHost makes it possible to:
+
+- Connect multiple low-spec machines
+- Automatically choose the least-loaded host
+- Provision virtual machines through a web interface
+- Keep the system simple and understandable
+
+This project is intentionally lightweight and educational. It focuses on clarity and usability over complexity.
+
+---
+
+## How It Works
+
+SkyHost has three core components:
+
+### 1. Controller
+
+- Built with **FastAPI**
+- Maintains a registry of host nodes
+- Polls each host for CPU, RAM, and VM usage
+- Uses a simple least-loaded scheduling strategy
+- Exposes a `/request-vm` endpoint
+- Returns the VM console link after provisioning
+
+The Controller acts as the brain of the cluster.
+
+---
+
+### 2. Host Agent
+
+- Runs on each host machine
+- Built with **FastAPI**
+- Exposes:
+  - `GET /status` → system metrics and VM count
+  - `POST /start-vm` → clone and start a VM
+- Uses:
+  - `virsh` (libvirt) to manage VMs
+  - `psutil` to gather system metrics
+
+Each Host Agent manages virtualization locally while reporting status to the Controller.
+
+---
+
+### 3. Web UI
+
+- Lightweight HTML + JavaScript
+- Communicates only with the Controller
+- Displays cluster status
+- Allows users to request new VMs
+- Displays returned VM links
+
+No direct communication occurs between the UI and host machines.
+
+---
+
+## Architecture Overview
+
+```
+User → Web UI → Controller → Host Agent → KVM/libvirt → Virtual Machine
+```
 
 ---
 
@@ -11,192 +85,81 @@ SkyHost is built for environments like schools, clubs, and small teams where har
 ```
 skyhost/
 │
-├── controller/          # holds the FastAPI backend, scheduling logic, and host registry. This is the “brain” of SkyHost.
-├── agent/               # contains the Host Agent FastAPI service, virsh integration, and system metrics. This is what runs on every host machine.
-├── ui/                  # is the user-facing dashboard. It only talks to the controller, never directly to hosts.
-├── bootstrapper/        # is your future installer/ISO downloader. For now, it’s a simple script with a menu.
-├── vm-scripts/          # stores setup instructions, not images. qcow2 files stay local.
-└── docs/                # Team onboarding, architecture, demo plan
+├── controller/      # Central scheduling API
+├── agent/           # Host-side VM management service
+├── ui/              # Web dashboard
+├── bootstrapper/    # Setup helper scripts
+├── vm-scripts/      # VM template setup instructions
+└── docs/            # Architecture and documentation
 ```
 
-Each folder is isolated so teammates can work independently with minimal merge conflicts.
-
 ---
 
-## High-Level Architecture
+## Technology Stack
 
-SkyHost consists of four major components:
+**Backend**
+- Python 3
+- FastAPI
+- psutil
+- httpx / requests
 
-### Controller
+**Virtualization**
+- KVM
+- libvirt
+- virsh
 
-- FastAPI backend  
-- Polls all hosts for CPU/RAM/VM count  
-- Runs a simple scheduler (least-loaded host)  
-- Exposes `/request-vm` for the UI  
-- Returns VM console URLs  
+**Frontend**
+- HTML / JavaScript
+- Bootstrap (or lightweight React)
 
-### Host Agent
-
-- Runs on each Host Node  
-- FastAPI service exposing:
-  - `GET /status` → CPU, RAM, VM count  
-  - `POST /start-vm` → clone + start VM  
-- Uses `virsh` to manage VMs  
-- Uses `psutil` for metrics  
-
-### Web UI
-
-- HTML/JS + Bootstrap (or lightweight React)  
-- Displays host load  
-- Provides a “Request VM” button  
-- Shows the VM link returned by the controller  
-
-### VM Templates
-
-- Alpine Linux (lightweight)  
-- Lubuntu or Debian LXDE (GUI)  
-- Stored locally, not committed to Git  
-- Cloned by the Host Agent when provisioning VMs  
-
-### Bootstrapper (Final App)
-
-- Simple script or CLI tool  
-- Lets user choose:
-  - “Set up Host Node”
-  - “Set up Controller”
-- Downloads correct ISO or setup script  
-- Future: autoinstall, USB creation, EXE bundling  
-
----
-
-## Tech Stack
-
-### Languages
-
-- Python 3  
-- Bash (optional)  
-- HTML/JS (or React)  
-
-### Frameworks
-
-- FastAPI (controller + agent)  
-- Bootstrap or React (UI)  
-
-### Tools
-
-- KVM + libvirt  
-- `virsh` CLI  
-- `psutil`  
-- `httpx` / `requests`  
-
-### Operating Systems
-
-- Ubuntu Server 22.04 (hosts + controller)  
-- Alpine Linux (lightweight guest)  
-- Lubuntu or Debian LXDE (GUI guest)  
+**Recommended Host OS**
+- Ubuntu Server 22.04
 
 ---
 
 ## Getting Started
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-org>/skyhost
+git clone https://github.com/<your-username>/skyhost
 cd skyhost
 ```
 
-### 2. Review the docs
-
-Inside `docs/` you’ll find:
-
-- `TEAM_PROMPT.md` — onboarding prompt for teammates to paste into their LLM  
-- `architecture.md` — system overview  
-- `demo_plan.md` — how to present SkyHost  
-- `setup_instructions.md` — how to prepare hosts and templates  
-
-### 3. Choose your component
-
-Each teammate works inside one folder:
-
-- `controller/` → Controller Developer  
-- `agent/` → Host Agent Developer  
-- `ui/` → Web UI Developer  
-- `bootstrapper/` → Final App Developer  
-- `vm-templates/` → VM Template Creator  
-
----
-
-## Development Overview
-
-### Controller
-
-Run locally:
+### 2. Start the Controller
 
 ```bash
 cd controller
 uvicorn app:app --reload --port 9000
 ```
 
-### Host Agent
+### 3. Start a Host Agent
 
-Run on each host:
+On each host machine:
 
 ```bash
 cd agent
 uvicorn agent:app --host 0.0.0.0 --port 8000
 ```
 
-### Web UI
+### 4. Open the Web UI
 
-Open `ui/index.html` in a browser  
-or serve with any static file server.
+Open `ui/index.html` in a browser or serve it with a simple static server.
 
-### Bootstrapper
-
-Run:
-
-```bash
-cd bootstrapper
-python3 skyhost_setup.py
-```
+Once running, you can request virtual machines through the web interface.
 
 ---
 
-## VM Templates
+## Future Improvements
 
-VM templates are **not stored in Git**. Instead, `vm-templates/README.md` explains how to create:
-
-- Alpine template (128–256 MB RAM)  
-- GUI template (Lubuntu or Debian LXDE)  
-
-These templates are cloned by the Host Agent when provisioning VMs.
-
----
-
-## Hackathon Deliverables
-
-- Working controller with scheduling logic  
-- Host agent responding to `/status` and `/start-vm`  
-- Two VM hosts + one weak machine  
-- Web UI that can request VMs  
-- Demo showing mixed workloads and scheduling decisions  
-- Bootstrapper that lets users choose Host vs Controller setup  
-
----
-
-## Team Onboarding
-
-Before starting work, each teammate should paste the contents of:
-
-```
-docs/TEAM_PROMPT.md
-```
-
-into their LLM. This ensures consistent guidance, tech stack usage, and scope control.
+- Smarter scheduling strategies
+- Authentication and multi-user support
+- VM lifecycle management (stop, destroy, snapshot)
+- Web-based VM console integration
+- Centralized logging
 
 ---
 
 ## License
 
-MIT (or choose your preferred license)
+MIT License
